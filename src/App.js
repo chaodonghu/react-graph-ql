@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
+import Organization from "./Organization";
 const TITLE = "React GraphQL GitHub Client";
 
 const axiosGitHubGraphQL = axios.create({
@@ -9,11 +10,24 @@ const axiosGitHubGraphQL = axios.create({
   },
 });
 
-const GET_ORGANIZATION = `
+const GET_ISSUES_OF_REPOSITORY = `
   {
     organization(login: "the-road-to-learn-react") {
       name
       url
+      repository(name: "the-road-to-learn-react") {
+        name
+        url
+        issues(last: 5) {
+          edges {
+            node {
+              id
+              title
+              url
+            }
+          }
+        }
+      }
     }
   }
 `;
@@ -26,10 +40,12 @@ const App = () => {
   const [errors, setErrors] = useState(null);
 
   useEffect(() => {
-    axiosGitHubGraphQL.post("", { query: GET_ORGANIZATION }).then((result) => {
-      setOrganization(result.data.data.organization);
-      setErrors(result.data.errors);
-    });
+    axiosGitHubGraphQL
+      .post("", { query: GET_ISSUES_OF_REPOSITORY })
+      .then((result) => {
+        setOrganization(result.data.data.organization);
+        setErrors(result.data.errors);
+      });
   }, []);
 
   const handleOnChange = useCallback((event) => {
@@ -54,6 +70,11 @@ const App = () => {
         <button type="submit">Search</button>
       </form>
       <hr />
+      {organization ? (
+        <Organization organization={organization} errors={errors} />
+      ) : (
+        <p>No information yet</p>
+      )}
     </div>
   );
 };
